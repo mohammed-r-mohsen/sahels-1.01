@@ -1,0 +1,13 @@
+{
+  "name": "sahels-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @sahels/web",
+    "build:web": "npm run build --workspace @sahels/web",
+    "dev": "npm run dev:web",
+    "build": "npm run build:web"
+  }
+}

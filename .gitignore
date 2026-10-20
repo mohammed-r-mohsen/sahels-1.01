@@ -1,0 +1,16 @@
+# .gitignore
+
+node_modules/
+.vite/
+dist/
+.env
+.env.*
+!.env.example
+
+# Rust
+/target/
+Cargo.lock
+
+# OS
+.DS_Store
+Thumbs.db
