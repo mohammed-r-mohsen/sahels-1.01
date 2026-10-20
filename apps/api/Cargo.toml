@@ -21,4 +21,5 @@ rand = "0.8"
 base64 = "0.22"
 jsonwebtoken = "9"
 http = "1"
+md5 = "0.7"
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"], default-features = false }
