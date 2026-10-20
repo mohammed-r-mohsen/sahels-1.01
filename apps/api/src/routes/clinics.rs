@@ -1,174 +1,129 @@
-<template>
-  <div class="min-h-screen bg-slate-950 p-6 text-slate-100">
-    <div class="mx-auto max-w-7xl">
-      <header class="mb-8 flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 md:flex-row md:items-center md:justify-between">
-        <div class="text-right">
-          <div class="text-sm text-brand-400">لوحة التحكم</div>
-          <h1 class="text-3xl font-black">Sahels Dashboard</h1>
-        </div>
-        <div class="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300">
-          العيادة: <span class="text-white">عيادة النخيل</span>
-        </div>
-      </header>
-
-      <section class="grid gap-6 md:grid-cols-4">
-        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div class="text-sm text-slate-400">إجمالي المواعيد اليوم</div>
-          <div class="mt-3 text-3xl font-black text-white">184</div>
-          <div class="mt-2 text-sm text-emerald-400">+12% من الأسبوع الماضي</div>
-        </div>
-        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div class="text-sm text-slate-400">نسبة عدم الحضور</div>
-          <div class="mt-3 text-3xl font-black text-white">6.2%</div>
-          <div class="mt-2 text-sm text-amber-400">تم تقليلها بنسبة 18%</div>
-        </div>
-        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div class="text-sm text-slate-400">الأطباء المتواجدون</div>
-          <div class="mt-3 text-3xl font-black text-white">4</div>
-          <div class="mt-2 text-sm text-cyan-400">من أصل 6 أطباء</div>
-        </div>
-        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div class="text-sm text-slate-400">العربون المفعّل</div>
-          <div class="mt-3 text-3xl font-black text-white">50 ر.س</div>
-          <div class="mt-2 text-sm text-violet-400">مفعّل لكل حجز</div>
-        </div>
-      </section>
-
-      <section class="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-xl font-bold">إدارة الأطباء</h2>
-            <span class="rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs text-brand-200">Clinic Control</span>
-          </div>
-
-          <div class="space-y-4">
-            <div class="grid gap-4 md:grid-cols-2">
-              <div>
-                <label class="mb-2 block text-sm text-slate-300">اسم الطبيب</label>
-                <input v-model="doctorName" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-right text-white" placeholder="د. علي الحربي" />
-              </div>
-              <div>
-                <label class="mb-2 block text-sm text-slate-300">التخصص</label>
-                <input v-model="doctorSpecialty" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-right text-white" placeholder="جلدية" />
-              </div>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-2">
-              <div>
-                <label class="mb-2 block text-sm text-slate-300">عدد المرضى في كل فترة</label>
-                <input v-model="maxPatients" type="number" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-right text-white" value="5" />
-              </div>
-              <div>
-                <label class="mb-2 block text-sm text-slate-300">الحالة</label>
-                <select v-model="doctorStatus" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-right text-white">
-                  <option value="available">متاح</option>
-                  <option value="busy">مشغول</option>
-                  <option value="off">غير متاح</option>
-                </select>
-              </div>
-            </div>
-
-            <button @click="saveDoctor" class="w-full rounded-xl bg-brand-500 px-4 py-3 font-bold text-white transition hover:bg-brand-400">
-              حفظ بيانات الطبيب
-            </button>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <h2 class="text-xl font-bold">دفع العربون</h2>
-          <div class="mt-5 space-y-4">
-            <div>
-              <label class="mb-2 block text-sm text-slate-300">طريقة الدفع</label>
-              <select v-model="paymentProvider" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-right text-white">
-                <option value="moyasar">Moyasar</option>
-                <option value="tabby">Tabby</option>
-                <option value="cash">نقدي</option>
-                <option value="bank">تحويل بنكي</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-2 block text-sm text-slate-300">قيمة العربون</label>
-              <input v-model="depositAmount" type="number" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-right text-white" value="50" />
-            </div>
-
-            <label class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800 px-3 py-3 text-sm text-slate-300">
-              <span>إلزام العميل بدفع العربون قبل التأكيد</span>
-              <input v-model="depositRequired" type="checkbox" class="h-4 w-4 rounded border-slate-600 bg-slate-700" />
-            </label>
-
-            <button @click="savePaymentMethod" class="w-full rounded-xl bg-emerald-500 px-4 py-3 font-bold text-white transition hover:bg-emerald-400">
-              حفظ طريقة الدفع
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-xl font-bold">الأطباء الحاليون</h2>
-          <span class="text-sm text-slate-400">إدارة حضور ووقت العمل</span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-right text-sm">
-            <thead class="text-slate-400">
-              <tr>
-                <th class="py-3 pr-4">الطبيب</th>
-                <th class="py-3 pr-4">التخصص</th>
-                <th class="py-3 pr-4">الحد الأقصى يوميًا</th>
-                <th class="py-3 pr-4">الحالة</th>
-                <th class="py-3 pr-4">مواعيد العمل</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="border-t border-slate-800">
-                <td class="py-3 pr-4">د. علي الحربي</td>
-                <td class="py-3 pr-4">جلدية</td>
-                <td class="py-3 pr-4">8</td>
-                <td class="py-3 pr-4"><span class="rounded-full bg-emerald-500/15 px-2 py-1 text-emerald-300">متاح</span></td>
-                <td class="py-3 pr-4">الاثنين / الثلاثاء / الأربعاء</td>
-              </tr>
-              <tr class="border-t border-slate-800">
-                <td class="py-3 pr-4">د. مها الزهراني</td>
-                <td class="py-3 pr-4">الأسنان</td>
-                <td class="py-3 pr-4">6</td>
-                <td class="py-3 pr-4"><span class="rounded-full bg-cyan-500/15 px-2 py-1 text-cyan-300">متاح</span></td>
-                <td class="py-3 pr-4">الأحد / الثلاثاء / الخميس</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-
-const doctorName = ref('د. علي الحربي');
-const doctorSpecialty = ref('جلدية');
-const maxPatients = ref(5);
-const doctorStatus = ref('available');
-const paymentProvider = ref('moyasar');
-const depositAmount = ref(50);
-const depositRequired = ref(true);
-
-const saveDoctor = () => {
-  console.log('doctor settings saved', {
-    doctorName: doctorName.value,
-    doctorSpecialty: doctorSpecialty.value,
-    maxPatients: maxPatients.value,
-    doctorStatus: doctorStatus.value,
-  });
+use axum::{
+    extract::FromRef,
+    http::{HeaderValue, StatusCode},
+    middleware::from_fn_with_state,
+    routing::{get, post},
+    Router,
 };
+use sqlx::PgPool;
+use std::net::SocketAddr;
+use tower_http::cors::CorsLayer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-const savePaymentMethod = () => {
-  console.log('payment method saved', {
-    paymentProvider: paymentProvider.value,
-    depositAmount: depositAmount.value,
-    depositRequired: depositRequired.value,
-  });
-};
-</script>
+mod config;
+mod middleware;
+mod models;
+mod routes;
+mod security;
+
+use config::AppConfig;
+use middleware::{auth::require_tenant, rate_limit::RateLimiter};
+use routes::{appointments::*, auth::*, clinics::*, health::*, reminders::*};
+use security::AppSecurity;
+
+#[derive(Clone)]
+pub struct AppState {
+    pub security: std::sync::Arc<AppSecurity>,
+    pub rate_limiter: std::sync::Arc<RateLimiter>,
+    pub config: AppConfig,
+    pub pool: PgPool,
+}
+
+impl FromRef<AppState> for std::sync::Arc<AppSecurity> {
+    fn from_ref(state: &AppState) -> Self {
+        state.security.clone()
+    }
+}
+
+impl FromRef<AppState> for std::sync::Arc<RateLimiter> {
+    fn from_ref(state: &AppState) -> Self {
+        state.rate_limiter.clone()
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    dotenvy::dotenv().ok();
+
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    let config = AppConfig::load();
+    let security = std::sync::Arc::new(AppSecurity::new(
+        config.jwt_secret.clone(),
+        config.encryption_key.clone(),
+    ));
+
+    let rate_limiter = std::sync::Arc::new(RateLimiter::new(
+        config.rate_limit_requests_per_minute,
+        config.rate_limit_burst,
+    ));
+
+    let pool = PgPool::connect(&config.database_url)
+        .await
+        .expect("failed to connect to PostgreSQL");
+
+    let state = AppState {
+        security,
+        rate_limiter,
+        config: config.clone(),
+        pool,
+    };
+
+    let protected_routes = Router::new()
+        .route("/api/v1/appointments", get(list_appointments))
+        .route("/api/v1/appointments", post(create_appointment))
+        .route("/api/v1/reminders/queue", post(queue_reminder))
+        .route("/api/v1/clinic/summary", get(clinic_summary))
+        .route("/api/v1/clinic/doctors", get(list_doctors))
+        .route("/api/v1/clinic/doctors", post(upsert_doctor))
+        .route("/api/v1/clinic/payment-methods", get(list_payment_methods))
+        .route("/api/v1/clinic/payment-methods", post(upsert_payment_method))
+        .route("/api/v1/auth/summary", get(auth_summary))
+        .layer(from_fn_with_state(state.clone(), require_tenant));
+
+    let allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ];
+
+    let cors = CorsLayer::new()
+        .allow_origin(allowed_origins.map(|origin| origin.parse::<HeaderValue>().unwrap()))
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::PUT,
+            axum::http::Method::DELETE,
+            axum::http::Method::PATCH,
+        ])
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+            axum::http::header::ACCEPT,
+            "x-clinic-id",
+        ]);
+
+    let app = Router::new()
+        .route("/health", get(health_check))
+        .route("/api/v1/auth/login", post(login_handler))
+        .route("/api/v1/auth/register", post(register_handler))
+        .route("/api/v1/auth/otp/request", post(otp_request_handler))
+        .route("/api/v1/auth/otp/verify", post(otp_verify_handler))
+        .merge(protected_routes)
+        .layer(cors)
+        .with_state(state);
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
+    tracing::info!("Sahels API listening on {}", addr);
+
+    let listener = tokio::net::TcpListener::bind(addr)
+        .await
+        .expect("failed to bind to port");
+
+    axum::serve(listener, app).await.expect("server failure");
+}

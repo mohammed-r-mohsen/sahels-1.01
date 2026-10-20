@@ -7,8 +7,20 @@ use argon2::{
     Argon2, PasswordHasher, PasswordVerifier,
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rand::rngs::OsRng;
+use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenClaims {
+    pub sub: String,
+    pub clinic_id: String,
+    pub email: String,
+    pub role: String,
+    pub exp: usize,
+    pub iat: usize,
+}
 
 #[derive(Clone)]
 pub struct AppSecurity {
@@ -28,6 +40,43 @@ impl AppSecurity {
         &self.jwt_secret
     }
 
+    pub fn generate_jwt(
+        &self,
+        user_id: &str,
+        clinic_id: &str,
+        email: &str,
+        role: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as usize;
+        let exp = now + 86400;
+
+        let claims = TokenClaims {
+            sub: user_id.to_string(),
+            clinic_id: clinic_id.to_string(),
+            email: email.to_string(),
+            role: role.to_string(),
+            exp,
+            iat: now,
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(self.jwt_secret.as_bytes()),
+        )?;
+        Ok(token)
+    }
+
+    pub fn verify_jwt(&self, token: &str) -> Result<TokenClaims, Box<dyn std::error::Error>> {
+        let validation = Validation::new(Algorithm::HS256);
+        let decoded = decode::<TokenClaims>(
+            token,
+            &DecodingKey::from_secret(self.jwt_secret.as_bytes()),
+            &validation,
+        )?;
+        Ok(decoded.claims)
+    }
+
     pub fn hash_password(&self, password: &str) -> Result<String, Box<dyn std::error::Error>> {
         let salt = SaltString::generate(&mut OsRng);
         let argon = Argon2::default();
@@ -41,7 +90,7 @@ impl AppSecurity {
         Ok(argon.verify_password(password.as_bytes(), &parsed).is_ok())
     }
 
-    pub fn encrypt(&self, plain_text: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn encrypt_sensitive(&self, plain_text: &str) -> Result<String, Box<dyn std::error::Error>> {
         let key_bytes = self.decode_key()?;
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
@@ -53,7 +102,7 @@ impl AppSecurity {
         Ok(BASE64.encode(out))
     }
 
-    pub fn decrypt(&self, encoded: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn decrypt_sensitive(&self, encoded: &str) -> Result<String, Box<dyn std::error::Error>> {
         let key_bytes = self.decode_key()?;
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
@@ -66,7 +115,7 @@ impl AppSecurity {
 
     pub fn generate_otp(&self, clinic_id: &str, phone: &str, ttl_seconds: u64) -> String {
         let current_epoch = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
-        let seed = format!("{clinic_id}:{phone}:{current_epoch}:{ttl_seconds}:{{} }", self.jwt_secret());
+        let seed = format!("{clinic_id}:{phone}:{current_epoch}:{ttl_seconds}:{}", self.jwt_secret());
         let hashed = format!("{:x}", md5::compute(seed.as_bytes()));
         hashed.chars().take(6).collect::<String>()
     }
