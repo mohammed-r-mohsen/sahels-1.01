@@ -10,6 +10,16 @@ pub struct HealthResponse {
     pub version: &'static str,
 }
 
+#[derive(Serialize)]
+pub struct AppointmentItem {
+    pub id: usize,
+    pub patient_name: String,
+    pub patient_phone: String,
+    pub appointment_date: String,
+    pub appointment_time: String,
+    pub status: &'static str,
+}
+
 pub async fn health_check() -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok",
@@ -18,10 +28,23 @@ pub async fn health_check() -> Json<HealthResponse> {
     })
 }
 
-pub async fn appointments_index(State(_state): State<AppState>) -> Json<Vec<String>> {
+pub async fn appointments_index(State(_state): State<AppState>) -> Json<Vec<AppointmentItem>> {
     Json(vec![
-        "appointment-1".to_string(),
-        "appointment-2".to_string(),
-        "appointment-3".to_string(),
+        AppointmentItem {
+            id: 1,
+            patient_name: "أحمد السلمان".to_string(),
+            patient_phone: "+966500000001".to_string(),
+            appointment_date: "2026-10-22".to_string(),
+            appointment_time: "09:30".to_string(),
+            status: "confirmed",
+        },
+        AppointmentItem {
+            id: 2,
+            patient_name: "سارة القحطاني".to_string(),
+            patient_phone: "+966500000002".to_string(),
+            appointment_date: "2026-10-22".to_string(),
+            appointment_time: "11:00".to_string(),
+            status: "pending",
+        },
     ])
 }

@@ -1,9 +1,11 @@
 use axum::{
+    extract::FromRef, 
     http::{HeaderValue, StatusCode},
+    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
-use std::{net::SocketAddr, sync::Arc};
+use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -19,8 +21,21 @@ use security::AppSecurity;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub security: Arc<AppSecurity>,
-    pub rate_limiter: Arc<RateLimiter>,
+    pub security: std::sync::Arc<AppSecurity>,
+    pub rate_limiter: std::sync::Arc<RateLimiter>,
+    pub config: AppConfig,
+}
+
+impl FromRef<AppState> for std::sync::Arc<AppSecurity> {
+    fn from_ref(state: &AppState) -> Self {
+        state.security.clone()
+    }
+}
+
+impl FromRef<AppState> for std::sync::Arc<RateLimiter> {
+    fn from_ref(state: &AppState) -> Self {
+        state.rate_limiter.clone()
+    }
 }
 
 #[tokio::main]
@@ -36,13 +51,12 @@ async fn main() {
         .init();
 
     let config = AppConfig::load();
-
-    let security = Arc::new(AppSecurity::new(
+    let security = std::sync::Arc::new(AppSecurity::new(
         config.jwt_secret.clone(),
         config.encryption_key.clone(),
     ));
 
-    let rate_limiter = Arc::new(RateLimiter::new(
+    let rate_limiter = std::sync::Arc::new(RateLimiter::new(
         config.rate_limit_requests_per_minute,
         config.rate_limit_burst,
     ));
@@ -50,18 +64,36 @@ async fn main() {
     let state = AppState {
         security,
         rate_limiter,
+        config: config.clone(),
     };
 
+    let allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ];
+
     let cors = CorsLayer::new()
-        .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
-        .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::PUT, axum::http::Method::DELETE])
-        .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
+        .allow_origin(allowed_origins.map(|origin| origin.parse::<HeaderValue>().unwrap()))
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::PUT,
+            axum::http::Method::DELETE,
+            axum::http::Method::PATCH,
+        ])
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+            axum::http::header::ACCEPT,
+        ]);
 
     let app = Router::new()
         .route("/health", get(health_check))
         .route("/api/v1/auth/login", post(login_handler))
         .route("/api/v1/auth/register", post(register_handler))
         .route("/api/v1/appointments", get(appointments_index))
+        .route("/api/v1/auth/otp/request", post(otp_request_handler))
+        .route("/api/v1/auth/otp/verify", post(otp_verify_handler))
         .layer(cors)
         .with_state(state);
 

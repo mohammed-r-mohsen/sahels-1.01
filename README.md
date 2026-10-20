@@ -1,38 +1,27 @@
 # Sahels Platform
 
-Sahels is a clinic operations platform tailored to the Saudi market. The project is structured as a monorepo with a Vue 3 frontend and a Rust Axum backend, designed for appointment scheduling, no-show reduction, AI-assisted workflows, messaging automation, and secure clinic administration.
+Sahels is a clinic operations platform for the Saudi market, designed to reduce no-shows, automate appointment communication, and centralize multi-clinic administration.
 
-## Architecture
+This version reflects the product direction discussed earlier and aligns with the original Sahels repository structure, while upgrading the stack around Vue 3 + Tailwind + Rust + PostgreSQL + Redis and adding stronger operational and security features.
+
+## Included in this version
+
+- Clinic login and registration UI
+- Clinic/doctor appointment models
+- Reminder and message workflow scaffold
+- PostgreSQL schema aligned with clinic operations and tenant isolation
+- Tokenized per-clinic integration model for payment, WhatsApp, and Instagram
+- OTP and secure authentication scaffolding
+- Backup and restore automation scripts
+- Security-first configuration for production use
+
+## Stack
 
 - Frontend: Vue 3 + Vite + Tailwind CSS + shadcn-style UI
 - Backend: Rust + Axum + Tokio
 - Database: PostgreSQL
-- Cache/Queues: Redis + BullMQ
-- Security: JWT, rate limiting, password hashing, encryption-at-rest patterns, secure headers
-- Observability: logs, request tracing, health checks
-
-## Core modules
-
-- Patient management
-- Appointment scheduling and calendar management
-- Reminder engine via WhatsApp / SMS
-- Manual and automated follow-up flows
-- No-show prediction and risk scoring
-- Clinic staff dashboard and reports
-- Multi-branch and multi-doctor support
-- Booking and payment workflows
-
-## Security standards
-
-This repository intentionally includes security-first patterns for production readiness:
-
-- rate limiting per IP and user
-- secure password hashing with Argon2
-- encryption helpers for secret values
-- secure CORS and security headers
-- environment-based configuration
-- JWT-ready auth layer
-- audit logging hooks
+- Cache / queue: Redis
+- Security: JWT, Argon2, encryption helpers, rate limiting, secure headers, OTP hooks
 
 ## Project structure
 
@@ -45,42 +34,45 @@ This repository intentionally includes security-first patterns for production re
 │       ├── src
 │       ├── index.html
 │       └── package.json
+├── docs/
+├── scripts/
 ├── docker-compose.yml
 ├── .env.example
 ├── .gitignore
-└── README.md
+├── init.sql
+├── README.md
+└── package.json
 ```
+
+## Security and compliance notes
+
+- clinic-level tokens for payment, WhatsApp, Instagram, OTP, and API access
+- rate limiting on auth and API routes
+- secret encryption helpers
+- backup retention automation
+- environment-based configuration for production deployments
+- Saudi-market-aligned tenant model and clinic isolation hooks
 
 ## Quick start
 
-### 1) Start infrastructure
-
 ```bash
 docker compose up -d postgres redis
-```
 
-### 2) Backend
-
-```bash
 cd apps/api
 cargo run
-```
 
-### 3) Frontend
-
-```bash
-cd apps/web
+cd ../web
 npm install
 npm run dev
 ```
 
-## Default URLs
+## Default ports
 
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:8080
+- API: http://localhost:8080
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 
 ## Notes
 
-This is a production-minded starter scaffold, not a full production deployment. Use it as the base for a modular clinic platform with security-aware engineering from day one.
+This version is a production-minded MVP foundation, not a final deployment. It is designed to evolve into a multi-clinic, secure operations platform with reminder automation, payment orchestration, clinic-level tokens, and OTP-driven validation.

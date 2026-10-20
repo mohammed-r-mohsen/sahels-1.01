@@ -8,7 +8,7 @@ use argon2::{
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use rand::rngs::OsRng;
-use std::error::Error;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone)]
 pub struct AppSecurity {
@@ -28,20 +28,20 @@ impl AppSecurity {
         &self.jwt_secret
     }
 
-    pub fn hash_password(&self, password: &str) -> Result<String, Box<dyn Error>> {
+    pub fn hash_password(&self, password: &str) -> Result<String, Box<dyn std::error::Error>> {
         let salt = SaltString::generate(&mut OsRng);
         let argon = Argon2::default();
         let hash = argon.hash_password(password.as_bytes(), &salt)?;
         Ok(hash.to_string())
     }
 
-    pub fn verify_password(&self, password: &str, hash: &str) -> Result<bool, Box<dyn Error>> {
+    pub fn verify_password(&self, password: &str, hash: &str) -> Result<bool, Box<dyn std::error::Error>> {
         let parsed = PasswordHash::new(hash)?;
         let argon = Argon2::default();
         Ok(argon.verify_password(password.as_bytes(), &parsed).is_ok())
     }
 
-    pub fn encrypt(&self, plain_text: &str) -> Result<String, Box<dyn Error>> {
+    pub fn encrypt(&self, plain_text: &str) -> Result<String, Box<dyn std::error::Error>> {
         let key_bytes = self.decode_key()?;
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
@@ -53,7 +53,7 @@ impl AppSecurity {
         Ok(BASE64.encode(out))
     }
 
-    pub fn decrypt(&self, encoded: &str) -> Result<String, Box<dyn Error>> {
+    pub fn decrypt(&self, encoded: &str) -> Result<String, Box<dyn std::error::Error>> {
         let key_bytes = self.decode_key()?;
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
@@ -64,7 +64,14 @@ impl AppSecurity {
         Ok(String::from_utf8(plaintext)?)
     }
 
-    fn decode_key(&self) -> Result<Vec<u8>, Box<dyn Error>> {
+    pub fn generate_otp(&self, clinic_id: &str, phone: &str, ttl_seconds: u64) -> String {
+        let current_epoch = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+        let seed = format!("{clinic_id}:{phone}:{current_epoch}:{ttl_seconds}:{{} }", self.jwt_secret());
+        let hashed = format!("{:x}", md5::compute(seed.as_bytes()));
+        hashed.chars().take(6).collect::<String>()
+    }
+
+    fn decode_key(&self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         let key_value = self.encryption_key.trim();
         let bytes = if let Some(stripped) = key_value.strip_prefix("base64:") {
             BASE64.decode(stripped)?
